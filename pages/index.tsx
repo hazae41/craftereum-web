@@ -4,6 +4,7 @@ import { Contract, ContractFactory } from "https://esm.sh/@ethersproject/contrac
 import { Network, Web3Provider } from "https://esm.sh/@ethersproject/providers"
 import Jazzicon from "https://esm.sh/@metamask/jazzicon"
 import React, { DependencyList, useEffect, useMemo, useState } from 'https://esm.sh/react'
+import * as Metamask from "../components/metamask.tsx"
 
 declare global {
   interface Window {
@@ -52,40 +53,7 @@ export default function Home() {
 
 interface AppMemory {
   web3: Web3Provider
-  accounts: string[]
-}
-
-function useEthereum() {
-  const ethereum = useMemo(() => {
-    const ethereum = window.ethereum
-    ethereum.autoRefreshOnNetworkChange = false
-    return ethereum
-  }, [])
-
-  return ethereum
-}
-
-function useWeb3(ethereum: any) {
-  const web3 = useMemo(() => {
-    if (!ethereum) return
-    return new Web3Provider(ethereum)
-  }, [ethereum])
-
-  return web3
-}
-
-function useAccounts(ethereum: any) {
-  const [accounts, setAccounts] = useState<string[]>([])
-
-  useEffect(() => {
-    if (!ethereum) return
-    ethereum
-      .request({ method: 'eth_requestAccounts' })
-      .then(setAccounts);
-    ethereum.on('accountsChanged', setAccounts);
-  }, [ethereum])
-
-  return accounts
+  account: string
 }
 
 function useNetwork(web3?: Web3Provider) {
@@ -101,13 +69,57 @@ function useNetwork(web3?: Web3Provider) {
 }
 
 const Connector = () => {
-  const ethereum = useEthereum()
+  const ethereum = Metamask.useEthereum()
+
+  const [connector, setConnector] =
+    useState<"metamask">()
+
+  if (connector === "metamask")
+    return <MetamaskConnector
+      ethereum={ethereum} />
+
+  return <div className="bg-white rounded-3xl shadow-lg p-4 w-full max-w-sm">
+    <div className="text-xl text-black font-semibold"
+      children="Connect to a wallet" />
+    <div className="text-black text-opacity-50 font-medium"
+      children="Choose a way to connect to your wallet" />
+    <div className="m-4" />
+    <MetamaskButton
+      onClick={() => setConnector("metamask")}
+      ethereum={ethereum} />
+  </div>
+}
+
+const MetamaskButton = (props: {
+  ethereum: any
+  onClick: () => void
+}) => {
+  const { ethereum, onClick } = props
+
+  if (!ethereum) return null
+
+  return <button
+    className="rounded-2xl w-full p-4 border-2 border-gray-100 hover:border-green-400 flex justify-between"
+    onClick={onClick}>
+    <div className="text-black font-medium"
+      children="MetaMask" />
+    <img height={24} width={24}
+      src="/metamask.png" />
+  </button>
+}
+
+const MetamaskConnector = (props: {
+  ethereum: any
+}) => {
+  const { ethereum } = props
+  const { useWeb3, useAccount } = Metamask
+
   const web3 = useWeb3(ethereum)
-  const accounts = useAccounts(ethereum)
+  const account = useAccount(ethereum)
   const network = useNetwork(web3)
 
   console.log("web3", web3)
-  console.log("accounts", accounts)
+  console.log("account", account)
   console.log("network", network)
 
   if (!ethereum)
@@ -120,7 +132,7 @@ const Connector = () => {
       <div children="An error occured" />
     </div>
 
-  if (!accounts.length)
+  if (!account)
     return <div className="bg-white rounded-lg shadow-lg p-4 w-full max-w-sm">
       <div children="Loading..." />
     </div>
@@ -130,7 +142,7 @@ const Connector = () => {
       <div children="Please use the Ropsten Test Network in MetaMask" />
     </div>
 
-  const app: AppMemory = { web3, accounts }
+  const app: AppMemory = { web3, account }
 
   return (
     <Craftereum app={app} />
@@ -140,8 +152,7 @@ const Connector = () => {
 const Craftereum = (props: {
   app: AppMemory
 }) => {
-  const { web3, accounts } = props.app
-  const [account] = accounts
+  const { web3, account } = props.app
 
   const craftereum = useAsyncMemo(async (signal) => {
     const url = artifacts + "Craftereum.json"
