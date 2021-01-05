@@ -3,8 +3,9 @@
 import { Contract, ContractFactory } from "https://esm.sh/@ethersproject/contracts"
 import { Network, Web3Provider } from "https://esm.sh/@ethersproject/providers"
 import Jazzicon from "https://esm.sh/@metamask/jazzicon"
-import React, { DependencyList, useEffect, useMemo, useState } from 'https://esm.sh/react'
+import React, { DependencyList, useEffect, useMemo, useState, SetStateAction, Dispatch } from 'https://esm.sh/react'
 import * as Metamask from "../components/metamask.tsx"
+import Solc from "https://esm.sh/solc"
 
 declare global {
   interface Window {
@@ -29,7 +30,7 @@ function useAsyncMemo<T>(
   return value
 }
 
-const artifacts = "https://raw.githubusercontent.com/saurusmc/craftereum/master/artifacts/"
+const github = "https://raw.githubusercontent.com/saurusmc/craftereum/master/"
 
 async function jsonAt(url: string, signal: AbortSignal) {
   const req = await fetch(url, { signal })
@@ -155,7 +156,7 @@ const Craftereum = (props: {
   const { web3, account } = props.app
 
   const craftereum = useAsyncMemo(async (signal) => {
-    const url = artifacts + "Craftereum.json"
+    const url = github + "artifacts/Craftereum.json"
     const json = await jsonAt(url, signal)
     const addr = "0x14eb503F3446E6e443935CB75c854c47D9E080da"
     return new Contract(addr, json.abi, web3)
@@ -165,7 +166,7 @@ const Craftereum = (props: {
 
   const emeralds = useAsyncMemo(async (signal) => {
     if (!craftereum) return
-    const url = artifacts + "Emeralds.json"
+    const url = github + "artifacts/Emeralds.json"
     const json = await jsonAt(url, signal)
     const addr = await craftereum.emeralds()
     return new Contract(addr, json.abi, web3)
@@ -243,7 +244,9 @@ const BountyKill = (props: {
   const { web3, craftereum } = props
   const signer = web3.getSigner()
 
-  const [target, setTarget] = useState<string>("")
+  const $target = useState<Player>()
+  const [target, setTarget] = $target
+
   const [exp, setExp] = useState<string>()
 
   const expiration = useMemo(() => {
@@ -251,7 +254,7 @@ const BountyKill = (props: {
   }, [exp])
 
   const factory = useAsyncMemo(async (signal) => {
-    const url = artifacts + "BountyKill.json"
+    const url = github + "artifacts/BountyKill.json"
     const json = await jsonAt(url, signal)
     const { bytecode } = json.data
     return new ContractFactory(json.abi, bytecode, signer)
@@ -261,7 +264,7 @@ const BountyKill = (props: {
     if (!factory) return
 
     const contract = await factory
-      .deploy(craftereum.address, target, expiration)
+      .deploy(craftereum.address, target?.uuid, expiration)
 
     console.log("contract", contract)
   }
@@ -275,11 +278,8 @@ const BountyKill = (props: {
       <div className="h-4" />
       <div className="text-lg font-medium"
         children="Target" />
-      <div className="rounded-xl px-4 py-2 bg-gray-100">
-        <input className="w-full outline-none bg-transparent"
-          placeholder="Anyone"
-          onChange={e => setTarget(e.target.value)} />
-      </div>
+      <PlayerInput
+        $player={$target} />
       <div className="h-4" />
       <div className="text-lg font-medium"
         children="Expiration" />
@@ -289,9 +289,102 @@ const BountyKill = (props: {
           onChange={e => setExp(e.target.value)} />
       </div>
       <div className="h-4" />
-      <button className="rounded-xl w-full p-2 py-4 bg-green-400 hover:bg-green-500 text-white font-medium"
+      <button className="rounded-xl w-full p-2 bg-green-400 hover:bg-green-500 text-white font-bold"
         onClick={deploy}
-        children="Deploy Contract" />
+        children="DEPLOY!" />
     </div>
   )
+}
+
+type State<S> = [S, Dispatch<SetStateAction<S>>]
+
+interface Player {
+  name: string
+  uuid: string
+}
+
+function cors(target: string) {
+  const proxy = "https://cors.haz.workers.dev/"
+  return proxy + "?url=" + encodeURIComponent(target)
+}
+
+async function playerOf(input: string, signal: AbortSignal) {
+  const api = "https://api.mojang.com/users/profiles/minecraft/"
+  const res = await fetch(cors(api + input), { signal })
+  if (!res.ok) throw new Error(res.statusText)
+
+  const json = await res.json()
+  const name = json.name as string
+  const id = json.id as string
+
+  const uuid = [
+    id.substring(0, 8),
+    id.substring(8, 12),
+    id.substring(12, 16),
+    id.substring(16, 20),
+    id.substring(20, 32)
+  ].join("-")
+
+  return { name, uuid }
+}
+
+export const PlayerInput = (props: {
+  $player: State<Player | undefined>
+}) => {
+  const { $player } = props
+  const [player, setPlayer] = $player
+  const [input, setInput] = useState<string>()
+
+  useEffect(() => {
+    if (!input) return
+    const abort = new AbortController()
+    playerOf(input, abort.signal)
+      .then(setPlayer)
+      .catch(console.log)
+
+    return () => {
+      abort.abort()
+      setPlayer(undefined)
+    }
+  }, [input])
+
+  return <div>
+    <div className="flex items-center rounded-xl px-4 py-2 bg-gray-100">
+      <input className="w-full outline-none bg-transparent"
+        placeholder="Anyone"
+        onBlur={e => setInput(e.target.value)} />
+      <button className="rounded-xl text-gray-500 hover:text-green-500 text-sm font-bold"
+        children={<SearchIcon className="w-5 h-5" />} />
+    </div>
+    <div className="m-2" />
+    <PlayerInfo
+      player={player} />
+  </div>
+}
+
+const SearchIcon = ({ className }: { className: string }) =>
+  <svg className={className} fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+    <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
+  </svg>
+
+const PlayerInfo = (props: {
+  player?: Player
+}) => {
+  const { player } = props
+
+  const minotar = "https://minotar.net/avatar/"
+
+  if (!player)
+    return <div className="text-center font-medium"
+      children="Player not found" />
+
+  return <div className="flex px-4 py-2 justify-between items-center rounded-xl bg-gray-100">
+    <div>
+      <div className="font-medium" children={player.name} />
+      <div className="text-sm text-gray-500" children={player.uuid} />
+    </div>
+    <img className="rounded-xl"
+      style={{ width: 32, height: 32 }}
+      src={minotar + player.name + "/32"} />
+  </div>
 }
