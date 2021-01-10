@@ -9,7 +9,7 @@ export const WCButton = (props: {
   const { onClick } = props
 
   return <button
-    className="rounded-2xl w-full p-4 border-2 border-gray-100 hover:border-green-400 flex justify-between items-center"
+    className="rounded-2xl w-full p-4 border-2 border-gray-100 hover:border-green-400 flex justify-between items-center focus:outline-none focus:ring focus:ring-green-300"
     onClick={onClick}>
     <div className="text-black font-medium"
       children="WalletConnect" />

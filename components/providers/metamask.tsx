@@ -1,7 +1,6 @@
-
 import { Web3Provider } from "https://esm.sh/@ethersproject/providers"
 import React, { useEffect, useMemo, useState } from 'https://esm.sh/react'
-import { useNetwork, AppMemory, Craftereum } from "../../pages/index.tsx"
+import { useNetwork, Craftereum } from "../../pages/index.tsx"
 
 export function useEthereum() {
   const ethereum = useMemo(() => {
@@ -45,7 +44,7 @@ export const MetamaskButton = (props: {
   const { onClick } = props
 
   return <button
-    className="rounded-2xl w-full p-4 border-2 border-gray-100 hover:border-green-400 flex justify-between items-center"
+    className="rounded-2xl w-full p-4 border-2 border-gray-100 hover:border-green-400 flex justify-between items-center focus:outline-none focus:ring focus:ring-green-300"
     onClick={onClick}>
     <div className="text-black font-medium"
       children="MetaMask" />
@@ -83,6 +82,7 @@ export const MetamaskConnector = (props: {
       <div children="Please use the Ropsten Test Network in MetaMask" />
     </div>
 
-  const app: AppMemory = { web3, account }
-  return <Craftereum app={app} />
+  return <Craftereum
+    web3={web3}
+    account={account} />
 }

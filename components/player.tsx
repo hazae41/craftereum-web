@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'https://esm.sh/react'
-import { State } from "../components/react.tsx"
+import { State } from "./react.tsx"
 import { SearchIcon } from "./icons.tsx"
-import { cors, Status } from "../components/async.tsx"
+import { cors, Status } from "./async.tsx"
 
 export interface Player {
   name: string
@@ -29,9 +29,10 @@ export async function playerOf(input: string, signal: AbortSignal) {
 }
 
 export const PlayerInput = (props: {
+  placeholder?: string,
   $player: State<Player | undefined>
 }) => {
-  const { $player } = props
+  const { $player, placeholder } = props
   const [player, setPlayer] = $player
   const [input, setInput] = useState<string>()
   const [status, setStatus] = useState<Status>()
@@ -64,7 +65,7 @@ export const PlayerInput = (props: {
   return <div>
     <div className="flex items-center rounded-xl px-4 py-2 bg-gray-100">
       <input className="w-full outline-none bg-transparent"
-        placeholder="Anyone"
+        placeholder={placeholder}
         onKeyPress={e => e.key === "Enter"
           && setInput(e.currentTarget.value)}
         onBlur={e => setInput(e.target.value)} />

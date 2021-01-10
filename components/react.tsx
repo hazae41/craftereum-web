@@ -1,4 +1,4 @@
-import { DependencyList, Dispatch, SetStateAction, useEffect, useState } from 'https://esm.sh/react'
+import { DependencyList, Dispatch, SetStateAction, useEffect, useMemo, useState } from 'https://esm.sh/react'
 
 export type State<S> = [S, Dispatch<SetStateAction<S>>]
 
@@ -15,4 +15,26 @@ export function useAsyncMemo<T>(
   }, deps)
 
   return value
+}
+
+export function useUpdate<T>(f: () => T): [T, () => void] {
+  const [state, setState] = useState(f)
+  return [state, () => setState(f())]
+}
+
+export function usePath() {
+  const [path, update] = useUpdate(() => {
+    return location.hash.substr(1).split("/")
+  })
+
+  useEffect(() => {
+    onhashchange = () => update()
+    return () => { onhashchange = null }
+  }, [])
+
+  return path
+}
+
+export function visit(path: string) {
+  return () => { location.hash = path }
 }
