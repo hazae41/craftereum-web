@@ -24,17 +24,17 @@ export function useUpdate<T>(f: () => T): [T, () => void] {
 
 export function usePath() {
   const [path, update] = useUpdate(() => {
-    return location.hash.substr(1).split("/")
+    return window.location.hash.substr(1).split("/")
   })
 
   useEffect(() => {
-    onhashchange = () => update()
-    return () => { onhashchange = null }
+    window.onhashchange = () => update()
+    return () => { window.onhashchange = null }
   }, [])
 
   return path
 }
 
 export function visit(path: string) {
-  return () => { location.hash = path }
+  return () => { window.location.hash = path }
 }

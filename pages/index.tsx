@@ -1,5 +1,3 @@
-/// <reference lib="dom" />
-
 import { Contract, ContractFactory } from "https://esm.sh/@ethersproject/contracts"
 import { Network, Web3Provider } from "https://esm.sh/@ethersproject/providers"
 import Jazzicon from "https://esm.sh/@metamask/jazzicon"
@@ -10,14 +8,6 @@ import { Player, PlayerInput } from "../components/player.tsx"
 import { MetamaskButton, MetamaskConnector, useEthereum } from "../components/providers/metamask.tsx"
 import { WCButton } from "../components/providers/walletconnect.tsx"
 import { useAsyncMemo, usePath, visit } from "../components/react.tsx"
-
-declare global {
-  interface Window {
-    ethereum: any
-    craftereum: any
-    emeralds: any
-  }
-}
 
 const github = "https://raw.githubusercontent.com/saurusmc/craftereum/master/"
 
@@ -37,18 +27,6 @@ export default function Home() {
   )
 }
 
-export function useNetwork(web3?: Web3Provider) {
-  const [network, setNetwork] = useState<Network>()
-
-  useEffect(() => {
-    if (!web3) return
-    setNetwork(web3.network)
-    web3.on('network', setNetwork)
-  }, [web3])
-
-  return network
-}
-
 export type Connectors =
   | "metamask"
   | "walletconnect"
@@ -64,6 +42,7 @@ const Connector = () => {
 
   if (connector === "metamask")
     return <MetamaskConnector
+      Children={Craftereum}
       ethereum={ethereum} />
 
   if (connector === "walletconnect")
