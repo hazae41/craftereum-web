@@ -4,28 +4,19 @@ import { SearchIcon } from "./icons.tsx"
 import { cors, Status } from "./async.tsx"
 
 export interface Player {
-  name: string
-  uuid: string
+  avatar: string,
+  id: string,
+  raw_id: string,
+  username: string
 }
 
 export async function playerOf(input: string, signal: AbortSignal) {
-  const api = "https://api.mojang.com/users/profiles/minecraft/"
+  const api = "https://playerdb.co/api/player/minecraft/"
   const res = await fetch(cors(api + input), { signal })
   if (!res.ok) throw new Error(res.statusText)
 
   const json = await res.json()
-  const name = json.name as string
-  const id = json.id as string
-
-  const uuid = [
-    id.substring(0, 8),
-    id.substring(8, 12),
-    id.substring(12, 16),
-    id.substring(16, 20),
-    id.substring(20, 32)
-  ].join("-")
-
-  return { name, uuid }
+  return json.data.player as Player
 }
 
 export const PlayerInput = (props: {
@@ -89,15 +80,13 @@ export const PlayerInfo = (props: {
 }) => {
   const { player } = props
 
-  const minotar = "https://minotar.net/avatar/"
-
   return <div className="flex px-4 py-2 justify-between items-center rounded-xl bg-gray-100">
     <div>
-      <div className="font-medium" children={player.name} />
-      <div className="text-sm text-gray-500" children={player.uuid} />
+      <div className="font-medium" children={player.username} />
+      <div className="text-sm text-gray-500" children={player.id} />
     </div>
     <img className="rounded-xl"
       style={{ width: 32, height: 32 }}
-      src={minotar + player.uuid + "/32"} />
+      src={player.avatar} />
   </div>
 }

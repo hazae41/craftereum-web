@@ -2,12 +2,14 @@ import { Contract, ContractFactory } from "https://esm.sh/@ethersproject/contrac
 import { Network, Web3Provider } from "https://esm.sh/@ethersproject/providers"
 import Jazzicon from "https://esm.sh/@metamask/jazzicon"
 import React, { DependencyList, useEffect, useMemo, useState } from 'https://esm.sh/react'
+import { BigNumber } from "https://cdn.esm.sh/v13/@ethersproject/bignumber@5.0.12/lib/bignumber.d.ts"
 import { fetchJson, Status } from "../components/async.tsx"
 import { Loading } from "../components/icons.tsx"
-import { Player, PlayerInput } from "../components/player.tsx"
+import { Player, PlayerInfo, PlayerInput, playerOf } from "../components/player.tsx"
 import { MetamaskButton, MetamaskConnector, useEthereum } from "../components/providers/metamask.tsx"
 import { WCButton } from "../components/providers/walletconnect.tsx"
-import { useAsyncMemo, usePath, visit } from "../components/react.tsx"
+import { useAsyncMemo, useLocalStorage, usePath, visit } from "../components/react.tsx"
+import { sourcify } from "../components/ethers.tsx"
 
 const github = "https://raw.githubusercontent.com/saurusmc/craftereum/master/"
 
@@ -15,8 +17,8 @@ export default function Home() {
   return (
     <div className="flex flex-col items-center container mx-auto p-4">
       <div className="flex flex-col items-center">
-        <div className="text-6xl sm:text-8xl text-white font-mono font-semibold tracking-wide"
-          onClick={visit("#")}
+        <div className="text-6xl sm:text-8xl text-white font-mono font-semibold tracking-wide cursor-pointer"
+          onClick={() => visit("/")}
           children="CRAFTΞRΞUM" />
         <div className="text-xl sm:text-3xl text-white text-opacity-60 font-medium"
           children="Saurus International Server" />
@@ -56,10 +58,10 @@ const Connector = () => {
       children="Choose a way to connect to your wallet" />
     <div className="m-4" />
     <div className="space-y-2">
-      {ethereum && <MetamaskButton
-        onClick={select("metamask")} />}
       <WCButton
         onClick={select("walletconnect")} />
+      {ethereum && <MetamaskButton
+        onClick={select("metamask")} />}
     </div>
   </div>
 }
@@ -87,69 +89,95 @@ export const Craftereum = (props: {
     return new Contract(addr, json.abi, web3.getSigner())
   }, [web3, craftereum])
 
-  if (!craftereum || !emeralds)
+  const balance: BigNumber = useAsyncMemo(async () => {
+    if (!emeralds) return
+    return await emeralds.balanceOf(account)
+  }, [emeralds, account])
+
+  if (!craftereum || !emeralds || !balance)
     return null
 
-  const app = { web3, account, craftereum, emeralds }
+  const app = { web3, account, craftereum, emeralds, balance }
 
   return (<>
-    <Account
-      {...app} />
+    <Account app={app} />
     <div className="m-2" />
     {page === "deposit" &&
-      <Deposit {...app} />}
+      <Deposit app={app} />}
     {page === "withdraw" &&
-      <Withdraw {...app} />}
+      <Withdraw app={app} />}
+    {page === "contracts" &&
+      <Contracts app={app} />}
+    {page === "contract" &&
+      <ContractPage app={app}
+        path={subpath} />}
     {!page &&
-      <BountyKill {...app} />}
+      <BountyKill app={app} />}
   </>)
 }
 
 interface AppProps {
+  app: AppMemory
+}
+
+interface AppMemory {
   web3: Web3Provider,
   account: string,
   craftereum: Contract,
-  emeralds: Contract
+  emeralds: Contract,
+  balance: BigNumber
 }
 
 const Deposit = (props: AppProps) => {
-  const { account } = props
+  const { account } = props.app
+
+  const [amount, setAmount] = useState(0)
 
   return <div className="bg-white rounded-3xl shadow-lg p-4 w-full max-w-md">
     <div className="text-3xl font-display font-semibold"
       children="Deposit" />
     <div className="text-gray-500"
-      children="Deposit some emeralds from your Minecraft account to your wallet." />
+      children="Deposit some emeralds from your Minecraft account to your wallet" />
     <div className="my-4" />
-    <div className="bg-gray-100 p-2 rounded-lg overflow-auto whitespace-nowrap"
-      children={`/deposit <amount> ${account}`} />
+    <div className="text-lg font-medium"
+      children="Amount" />
+    <div className="rounded-xl px-4 py-2 bg-gray-100">
+      <input className="w-full outline-none bg-transparent"
+        type="number"
+        min={0}
+        value={amount}
+        onChange={e => setAmount(e.target.valueAsNumber)} />
+    </div>
+    <div className="my-4" />
+    <div className="text-lg font-medium"
+      children="Command" />
+    <div className="text-gray-500"
+      children="Copy and paste this command in Minecraft" />
+    <div className="bg-gray-100 p-2 rounded-lg overflow-auto whitespace-nowrap">
+      <input
+        readOnly
+        className="w-full outline-none bg-transparent"
+        onFocus={e => (e.target as any).select()}
+        value={`/deposit ${amount} ${account}`} />
+    </div>
   </div>
 }
 
 const Withdraw = (props: AppProps) => {
-  const { web3, craftereum, emeralds, account } = props
+  const { craftereum } = props.app
 
-  const [amount, setAmount] = useState(0)
+  const balance = props.app.balance.toNumber()
+  const [amount, setAmount] = useState(balance)
 
   const $player = useState<Player>()
   const [player, setPlayer] = $player
 
   const [status, setStatus] = useState<Status>()
 
-  const balance = useAsyncMemo(async () => {
-    return await emeralds.balanceOf(account)
-  }, [emeralds, account])
-
-  useEffect(() => {
-    if (!balance) return
-    setAmount(balance.toNumber())
-  }, [balance])
-
   const valid = useMemo(() => {
-    if (!balance) return false
     if (!player) return false
     if (!amount) return false
-    if (amount > balance.toNumber()) return false
+    if (amount > balance) return false
     if (status === "loading") return false
     return true
   }, [amount, player, balance, status])
@@ -159,7 +187,7 @@ const Withdraw = (props: AppProps) => {
       if (!player) return
       setStatus("loading")
       const receipt = await craftereum
-        .transfer(player.uuid, amount)
+        .transfer(player.id, amount)
       await receipt.wait()
       setStatus("ok")
     } catch (e: unknown) {
@@ -167,8 +195,6 @@ const Withdraw = (props: AppProps) => {
       setStatus("error")
     }
   }
-
-  if (!balance) return null
 
   return <div className="bg-white rounded-3xl shadow-lg p-4 w-full max-w-md">
     <div className="text-3xl font-display font-semibold"
@@ -182,7 +208,7 @@ const Withdraw = (props: AppProps) => {
       <input className="w-full outline-none bg-transparent"
         type="number"
         min={0}
-        max={balance.toNumber()}
+        max={balance}
         value={amount}
         onChange={e => setAmount(e.target.valueAsNumber)} />
     </div>
@@ -207,12 +233,9 @@ const Account = (props: AppProps) => {
     web3,
     account,
     craftereum,
-    emeralds
-  } = props
-
-  const balance = useAsyncMemo(async () => {
-    return await emeralds.balanceOf(account)
-  }, [emeralds, account])
+    emeralds,
+    balance
+  } = props.app
 
   const symbol = useAsyncMemo(async () => {
     return await emeralds.symbol()
@@ -231,7 +254,7 @@ const Account = (props: AppProps) => {
 
   return (
     <div className="bg-green-100 rounded-3xl shadow-lg px-6 py-4 w-full max-w-sm">
-      <div className="font-semibold text-black text-opacity-50"
+      <div className="font-semibold text-gray-500"
         children="Balance" />
       <div className="flex justify-end items-center">
         <div className="text-4xl"
@@ -259,22 +282,150 @@ const Account = (props: AppProps) => {
       <div className="m-2" />
       <div className="flex space-x-2">
         <button className="rounded-xl w-full p-2 bg-green-400 hover:bg-green-500 text-white font-medium focus:outline-none focus:ring focus:ring-green-300"
-          onClick={visit("withdraw")}
+          onClick={() => visit("/withdraw")}
           children="Withdraw" />
         <button className="rounded-xl w-full p-2 bg-green-400 hover:bg-green-500 text-white font-medium focus:outline-none focus:ring focus:ring-green-300"
-          onClick={visit("deposit")}
+          onClick={() => visit("/deposit")}
           children="Deposit" />
       </div>
     </div>
   )
 }
 
-const Contracts = () => {
-  return null
+const Contracts = (props: AppProps) => {
+  const [contracts, setContracts] =
+    useLocalStorage<string[]>("contracts")
+
+  if (!contracts)
+    return <div children="You don't have any contract" />
+
+  return <>
+    {contracts.map(address =>
+      <ContractDisplay
+        address={address}
+        {...props} />
+    )}
+  </>
+}
+
+const ContractPage = (props: AppProps & {
+  path: string[]
+}) => {
+  const { app, path } = props
+
+  const [address, subpath] = path
+
+  return <ContractDisplay app={app}
+    address={address} />
+}
+
+const ContractDisplay = (props: AppProps & {
+  address: string
+}) => {
+  const { app: { web3, emeralds }, address } = props
+  const signer = web3.getSigner()
+
+  const contract = useAsyncMemo(async (signal) => {
+    const url = github + "artifacts/BountyKill.json"
+    const json = await fetchJson(url, signal)
+    return new Contract(address, json.abi, signer)
+  }, [address])
+
+  const bytecode = useAsyncMemo(async () => {
+    return await web3.getCode(address)
+  }, [address])
+
+  const verified = useAsyncMemo(async (signal) => {
+    if (!bytecode) return false
+    const url = github + "artifacts/BountyKill.json"
+    const json = await fetchJson(url, signal)
+    const code = "0x" + json.data.deployedBytecode.object
+    return bytecode === code
+  }, [bytecode])
+
+  const opensource = useAsyncMemo(async (signal) => {
+    return await sourcify(address, signal) === "perfect"
+  }, [address])
+
+  const issuer = useAsyncMemo(async () => {
+    if (!contract) return
+    return await contract.issuer()
+  }, [contract])
+
+  const balance = useAsyncMemo(async () => {
+    if (!contract) return
+    return await emeralds.balanceOf(address)
+  }, [contract])
+
+  const symbol = useAsyncMemo(async () => {
+    return await emeralds.symbol()
+  }, [emeralds])
+
+  const target = useAsyncMemo(async (signal) => {
+    if (!contract) return
+    const id = await contract.targetPlayer()
+    return await playerOf(id, signal)
+  }, [contract])
+
+  const expiration = useAsyncMemo(async (signal) => {
+    if (!contract) return
+    const time = await contract.expirationTime()
+    return new Date(time.toNumber())
+  }, [contract])
+
+  const expired = useMemo(() => {
+    if (!expiration) return false
+    return expiration < new Date()
+  }, [expiration])
+
+  if (!contract) return <Loading className="text-white" />
+
+  return <div className="bg-white rounded-3xl shadow-lg p-4 w-full max-w-md">
+    <div className="flex justify-between items-center">
+      <div className="text-3xl font-display font-semibold"
+        children="BountyKill" />
+      {expired
+        ? <div className="text-xl font-display text-red-500" children="Expired" />
+        : <div className="text-xl font-display text-green-500" children="Active" />}
+    </div>
+    <div className="text-gray-500"
+      children="Give the balance to the first player who kills a target." />
+    <div className="my-4" />
+    <div className="flex justify-end items-center">
+      <div className="text-4xl"
+        children={balance?.toString()} />
+      <div className="m-2" />
+      <div className="text-4xl font-semibold"
+        children={symbol} />
+    </div>
+    <div className="my-4" />
+    <div className="text-lg font-medium"
+      children="Address" />
+    <div children={address} />
+    {verified
+      ? <div className="text-green-500" children="Verified bytecode" />
+      : <div className="text-red-500" children="Unverified bytecode" />}
+    {/* {opensource
+      ? <div className="text-green-500" children="Source code available" />
+      : <div className="text-red-500" children="Source code not available" />} */}
+    <div className="my-4" />
+    <div className="text-lg font-medium"
+      children="Issuer" />
+    <div children={issuer} />
+    <div className="my-4" />
+    <div className="text-lg font-medium"
+      children="Expiration" />
+    <div children={expiration?.toLocaleString()} />
+    <div className="my-4" />
+    <div className="text-lg font-medium"
+      children="Target" />
+    {target &&
+      <PlayerInfo player={target} />}
+  </div>
 }
 
 const BountyKill = (props: AppProps) => {
-  const { web3, craftereum } = props
+  const { web3, craftereum } = props.app
   const signer = web3.getSigner()
 
   const $target = useState<Player>()
@@ -301,11 +452,11 @@ const BountyKill = (props: AppProps) => {
       if (!factory) return
       setStatus("loading")
       const contract = await factory
-        .deploy(craftereum.address, target?.uuid, expiration)
+        .deploy(craftereum.address, target?.id, expiration)
       await contract.deployed()
-      console.log(contract)
       setContract(contract)
       setStatus("ok")
+      visit("/contract/" + contract.address)
     } catch (e: unknown) {
       setStatus("error")
     }
