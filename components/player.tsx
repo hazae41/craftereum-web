@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'https://esm.sh/react'
 import { State } from "./react.tsx"
-import { SearchIcon } from "./icons.tsx"
+import { Loading, SearchIcon } from "./icons.tsx"
 import { cors, Status } from "./async.tsx"
 
 export interface Player {
@@ -67,8 +67,8 @@ export const PlayerInput = (props: {
     {status === "ok" && <PlayerInfo
       player={player!} />}
     {status === "loading" && <div
-      className="text-center font-medium"
-      children="Loading..." />}
+      className="flex justify-center"
+      children={<Loading className="text-black" />} />}
     {status === "error" && <div
       className="text-center font-medium"
       children="Player not found" />}

@@ -3,7 +3,7 @@ import { Web3Provider } from "https://esm.sh/@ethersproject/providers"
 import { MetamaskButton, MetamaskConnector, useEthereum } from "./providers/metamask.tsx"
 import { WCButton } from "./providers/walletconnect.tsx"
 
-type Connector =
+type ConnectorName =
   | "metamask"
   | "walletconnect"
 
@@ -19,18 +19,18 @@ export const ConnectorPage = (props: {
   const ethereum = useEthereum()
 
   const [connector, setConnector] =
-    useState<Connector>()
+    useState<ConnectorName>()
 
-  const select = (value: Connector) =>
+  const select = (value: ConnectorName) =>
     () => setConnector(value)
 
   if (connector === "metamask")
     return <MetamaskConnector
       component={component}
-      ethereum={ethereum} />
+      ethereum={ethereum!} />
 
   if (connector === "walletconnect")
-    return <div className=""
+    return <div className="text-white font-medium"
       children="Not yet supported" />
 
   return <div className="bg-white rounded-3xl shadow-lg p-4 w-full max-w-sm">

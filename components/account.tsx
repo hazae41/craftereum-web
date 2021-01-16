@@ -3,7 +3,8 @@ import { Contract } from "https://esm.sh/@ethersproject/contracts"
 import { Web3Provider } from "https://esm.sh/@ethersproject/providers"
 import Jazzicon from "https://esm.sh/@metamask/jazzicon"
 import React, { useMemo } from 'https://esm.sh/react'
-import { useAsyncMemo, visit } from "./react.tsx"
+import { visit } from "./path.tsx"
+import { useAsyncMemo } from "./react.tsx"
 
 interface AppMemory {
   web3: Web3Provider,

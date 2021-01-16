@@ -67,7 +67,7 @@ export const Craftereum = (props: {
   }, [emeralds, account])
 
   if (!craftereum || !emeralds || !balance)
-    return null
+    return <Loading className="text-white" />
 
   const app = { web3, account, craftereum, emeralds, balance }
 

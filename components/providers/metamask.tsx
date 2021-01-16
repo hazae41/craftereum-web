@@ -1,11 +1,12 @@
-import { Web3Provider } from "https://esm.sh/@ethersproject/providers"
+import { ExternalProvider, Web3Provider } from "https://esm.sh/@ethersproject/providers"
 import React, { useEffect, useMemo, useState } from 'https://esm.sh/react'
 import { ConnectorComp } from "../connector.tsx"
 import { useNetwork } from "../ethers.tsx"
+import { Loading } from "../icons.tsx"
 
 declare global {
   interface Window {
-    ethereum: any
+    ethereum?: ExternalProvider
   }
 }
 
@@ -14,18 +15,12 @@ export function useEthereum() {
     return window.ethereum
   }, [])
 
-  useEffect(() => {
-    if (!ethereum) return
-    ethereum.autoRefreshOnNetworkChange = false
-  }, [ethereum])
-
   return ethereum
 }
 
-export function useWeb3(ethereum: any) {
+export function useWeb3(ethereum: ExternalProvider) {
   const web3 = useMemo(() => {
-    if (!ethereum) return
-    return new Web3Provider(ethereum)
+    return new Web3Provider(ethereum, "any")
   }, [ethereum])
 
   return web3
@@ -62,7 +57,7 @@ export const MetamaskButton = (props: {
 
 export const MetamaskConnector = (props: {
   component: ConnectorComp,
-  ethereum: any
+  ethereum: ExternalProvider
 }) => {
   const { component: Component, ethereum } = props
 
@@ -70,25 +65,12 @@ export const MetamaskConnector = (props: {
   const account = useAccount(ethereum)
   const network = useNetwork(web3)
 
-  if (!ethereum)
-    return <div className="bg-white rounded-lg shadow-lg p-4 w-full max-w-sm">
-      <div children="Please use MetaMask" />
-    </div>
+  if (!account || !network)
+    return <Loading className="text-white" />
 
-  if (!web3)
-    return <div className="bg-white rounded-lg shadow-lg p-4 w-full max-w-sm">
-      <div children="An error occured" />
-    </div>
-
-  if (!account)
-    return <div className="bg-white rounded-lg shadow-lg p-4 w-full max-w-sm">
-      <div children="Loading..." />
-    </div>
-
-  if (network?.chainId !== 3)
-    return <div className="bg-white rounded-lg shadow-lg p-4 w-full max-w-sm">
-      <div children="Please use the Ropsten Test Network in MetaMask" />
-    </div>
+  if (network.chainId !== 3)
+    return <div className="text-white font-medium"
+      children="Please use the Ropsten Test Network in MetaMask" />
 
   return <Component
     web3={web3}
