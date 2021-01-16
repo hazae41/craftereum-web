@@ -1,6 +1,4 @@
-/// <reference lib="dom" />
-
-import { DependencyList, Dispatch, SetStateAction, useCallback, useEffect, useMemo, useState } from 'https://esm.sh/react'
+import { DependencyList, Dispatch, SetStateAction, useCallback, useEffect, useState } from 'https://esm.sh/react'
 
 export type State<S> = [S, Dispatch<SetStateAction<S>>]
 
@@ -22,25 +20,6 @@ export function useAsyncMemo<T>(
 export function useUpdate<T>(f: () => T): [T, () => void] {
   const [state, setState] = useState(f)
   return [state, () => setState(f())]
-}
-
-export function usePath() {
-  const [path, update] = useUpdate(() => {
-    return window.location.hash.split("/").slice(1)
-  })
-
-  useEffect(() => {
-    window.onhashchange = () => update()
-    return () => { window.onhashchange = null }
-  }, [])
-
-  return path
-}
-
-export function visit(path: string) {
-  const current = window.location.hash.substr(1)
-  const url = new URL(path, "http://none.com" + current)
-  window.location.hash = url.pathname
 }
 
 export function useLocalStorage<T>(key: string): State<T | null> {

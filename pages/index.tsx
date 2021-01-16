@@ -7,8 +7,9 @@ import { fetchJson, Status } from "../components/async.tsx"
 import { ConnectorPage } from "../components/connector.tsx"
 import { sourcify } from "../components/ethers.tsx"
 import { Loading } from "../components/icons.tsx"
+import { usePath, visit } from "../components/path.tsx"
 import { Player, PlayerInfo, PlayerInput, playerOf } from "../components/player.tsx"
-import { useAsyncMemo, useLocalStorage, usePath, visit } from "../components/react.tsx"
+import { useAsyncMemo, useLocalStorage } from "../components/react.tsx"
 
 const github = "https://raw.githubusercontent.com/saurusmc/craftereum/master/"
 

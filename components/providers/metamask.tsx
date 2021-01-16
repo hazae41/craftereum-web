@@ -1,5 +1,5 @@
-import { Network, Web3Provider } from "https://esm.sh/@ethersproject/providers"
-import React, { forwardRef, Ref, useEffect, useMemo, useState } from 'https://esm.sh/react'
+import { Web3Provider } from "https://esm.sh/@ethersproject/providers"
+import React, { useEffect, useMemo, useState } from 'https://esm.sh/react'
 import { ConnectorComp } from "../connector.tsx"
 import { useNetwork } from "../ethers.tsx"
 
