@@ -1,5 +1,6 @@
 import { Network, Web3Provider } from "https://esm.sh/@ethersproject/providers"
 import React, { forwardRef, Ref, useEffect, useMemo, useState } from 'https://esm.sh/react'
+import { ConnectorComp } from "../connector.tsx"
 import { useNetwork } from "../ethers.tsx"
 
 declare global {
@@ -44,7 +45,6 @@ export function useAccount(ethereum: any): string | undefined {
   return accounts[0]
 }
 
-
 export const MetamaskButton = (props: {
   onClick: () => void
 }) => {
@@ -61,10 +61,10 @@ export const MetamaskButton = (props: {
 }
 
 export const MetamaskConnector = (props: {
-  Children: any,
+  component: ConnectorComp,
   ethereum: any
 }) => {
-  const { Children, ethereum } = props
+  const { component: Component, ethereum } = props
 
   const web3 = useWeb3(ethereum)
   const account = useAccount(ethereum)
@@ -90,7 +90,7 @@ export const MetamaskConnector = (props: {
       <div children="Please use the Ropsten Test Network in MetaMask" />
     </div>
 
-  return <Children
+  return <Component
     web3={web3}
     account={account} />
 }

@@ -1,24 +1,32 @@
 import React, { useState } from 'https://esm.sh/react'
-import { Craftereum } from "../pages/index.tsx"
+import { Web3Provider } from "https://esm.sh/@ethersproject/providers"
 import { MetamaskButton, MetamaskConnector, useEthereum } from "./providers/metamask.tsx"
 import { WCButton } from "./providers/walletconnect.tsx"
 
-export type Connectors =
+type Connector =
   | "metamask"
   | "walletconnect"
 
-export const Connector = () => {
+export type ConnectorComp = (props: {
+  web3: Web3Provider
+  account: string
+}) => JSX.Element | null
+
+export const ConnectorPage = (props: {
+  component: ConnectorComp
+}) => {
+  const { component } = props;
   const ethereum = useEthereum()
 
   const [connector, setConnector] =
-    useState<Connectors>()
+    useState<Connector>()
 
-  const select = (value: Connectors) =>
+  const select = (value: Connector) =>
     () => setConnector(value)
 
   if (connector === "metamask")
     return <MetamaskConnector
-      Children={Craftereum}
+      component={component}
       ethereum={ethereum} />
 
   if (connector === "walletconnect")

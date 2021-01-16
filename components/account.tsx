@@ -1,7 +1,17 @@
-import React, { useMemo } from 'https://esm.sh/react'
+import { BigNumber } from "https://esm.sh/@ethersproject/bignumber"
+import { Contract } from "https://esm.sh/@ethersproject/contracts"
+import { Web3Provider } from "https://esm.sh/@ethersproject/providers"
 import Jazzicon from "https://esm.sh/@metamask/jazzicon"
-import { AppMemory } from "../pages/index.tsx"
+import React, { useMemo } from 'https://esm.sh/react'
 import { useAsyncMemo, visit } from "./react.tsx"
+
+interface AppMemory {
+  web3: Web3Provider,
+  account: string,
+  craftereum: Contract,
+  emeralds: Contract,
+  balance: BigNumber
+}
 
 export const AccountCard = (props: {
   app: AppMemory

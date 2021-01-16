@@ -1,10 +1,10 @@
-import { BigNumber } from "https://cdn.esm.sh/v13/@ethersproject/bignumber@5.0.12/lib/bignumber.d.ts"
+import { BigNumber } from "https://esm.sh/@ethersproject/bignumber"
 import { Contract, ContractFactory } from "https://esm.sh/@ethersproject/contracts"
 import { Web3Provider } from "https://esm.sh/@ethersproject/providers"
 import React, { useMemo, useState } from 'https://esm.sh/react'
 import { AccountCard } from "../components/account.tsx"
 import { fetchJson, Status } from "../components/async.tsx"
-import { Connector } from "../components/connector.tsx"
+import { ConnectorPage } from "../components/connector.tsx"
 import { sourcify } from "../components/ethers.tsx"
 import { Loading } from "../components/icons.tsx"
 import { Player, PlayerInfo, PlayerInput, playerOf } from "../components/player.tsx"
@@ -23,12 +23,13 @@ export default function Home() {
           children="Saurus International Server" />
       </div>
       <div className="m-2" />
-      <Connector />
+      <ConnectorPage
+        component={Craftereum} />
     </div>
   )
 }
 
-export interface AppMemory {
+interface AppMemory {
   web3: Web3Provider,
   account: string,
   craftereum: Contract,
