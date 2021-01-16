@@ -60,7 +60,7 @@ export const PlayerInput = (props: {
         onKeyPress={e => e.key === "Enter"
           && setInput(e.currentTarget.value)}
         onBlur={e => setInput(e.target.value)} />
-      <button className="rounded-xl text-gray-500 hover:text-green-500 text-sm font-bold"
+      <button className="rounded-xl hover:text-green-500 text-sm font-bold focus:outline-none"
         children={<SearchIcon className="w-5 h-5" />} />
     </div>
     <div className="m-2" />

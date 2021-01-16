@@ -40,7 +40,7 @@ export const AccountCard = (props: {
   }, [account])
 
   return (
-    <div className="bg-green-100 rounded-3xl shadow-lg px-6 py-4 w-full max-w-sm">
+    <div className="bg-green-100 rounded-3xl shadow-xl px-6 py-4 w-full max-w-sm">
       <div className="font-semibold text-gray-500"
         children="Balance" />
       <div className="flex justify-end items-center">

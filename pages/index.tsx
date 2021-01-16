@@ -268,6 +268,7 @@ const ContractCard = (props: {
   const target = useAsyncMemo(async (signal) => {
     if (!contract) return
     const id = await contract.targetPlayer()
+    if (!id) return null
     return await playerOf(id, signal)
   }, [contract])
 
@@ -282,7 +283,8 @@ const ContractCard = (props: {
     return expiration < new Date()
   }, [expiration])
 
-  if (!contract) return <Loading className="text-white" />
+  if (!contract)
+    return <Loading className="text-white" />
 
   return <div className="bg-white rounded-3xl shadow-lg p-4 w-full max-w-md">
     <div className="flex justify-between items-center">
@@ -325,6 +327,8 @@ const ContractCard = (props: {
       children="Target" />
     {target &&
       <PlayerInfo player={target} />}
+    {target === null &&
+      <div children="Anyone" />}
   </div>
 }
 
@@ -358,7 +362,7 @@ const DeployCard = (props: {
       if (!factory) return
       setStatus("loading")
       const contract = await factory
-        .deploy(craftereum.address, target?.id, expiration)
+        .deploy(craftereum.address, target?.id ?? "", expiration)
       await contract.deployed()
       setContract(contract)
       setStatus("ok")
@@ -403,6 +407,9 @@ const DeployCard = (props: {
           children="DEPLOY!" />
         : <button className="flex justify-center items-center rounded-xl w-full p-2 bg-green-300 cursor-default text-white font-bold focus:outline-none"
           children={<>{status === "loading" && <Loading className="text-white" />}{"DEPLOY!"}</>} />}
+      {status === "error" &&
+        <div className="mt-2 text-center font-medium text-red-500"
+          children="An error occured" />}
     </div>
   )
 }
