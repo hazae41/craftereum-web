@@ -341,14 +341,10 @@ const DeployCard = (props: {
   const $target = useState<Player>()
   const [target, setTarget] = $target
 
-  const [exp, setExp] = useState<string>()
+  const [expiration, setExp] = useState(new Date().getTime())
 
   const [status, setStatus] = useState<Status>()
   const [contract, setContract] = useState<Contract>()
-
-  const expiration = useMemo(() => {
-    return new Date(exp ?? 0).getTime()
-  }, [exp])
 
   const factory = useAsyncMemo(async (signal) => {
     const url = github + "artifacts/BountyKill.json"
@@ -374,6 +370,7 @@ const DeployCard = (props: {
 
   const valid = useMemo(() => {
     if (!expiration) return false
+    if (expiration < new Date().getTime()) return false
     if (status === "loading") return false
     return true
   }, [expiration, status])
@@ -398,7 +395,8 @@ const DeployCard = (props: {
       <div className="rounded-xl px-4 py-2 bg-gray-100">
         <input className="w-full outline-none bg-transparent"
           type="datetime-local"
-          onChange={e => setExp(e.target.value)} />
+          defaultValue={expiration}
+          onChange={e => setExp(e.target.valueAsNumber)} />
       </div>
       <div className="my-4" />
       {valid
