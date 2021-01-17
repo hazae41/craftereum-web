@@ -341,7 +341,7 @@ const DeployCard = (props: {
   const $target = useState<Player>()
   const [target, setTarget] = $target
 
-  const [expiration, setExp] = useState(new Date().getTime())
+  const [expiration, setExp] = useState(new Date())
 
   const [status, setStatus] = useState<Status>()
   const [contract, setContract] = useState<Contract>()
@@ -369,8 +369,7 @@ const DeployCard = (props: {
   }
 
   const valid = useMemo(() => {
-    if (!expiration) return false
-    if (expiration < new Date().getTime()) return false
+    if (expiration < new Date()) return false
     if (status === "loading") return false
     return true
   }, [expiration, status])
@@ -395,8 +394,9 @@ const DeployCard = (props: {
       <div className="rounded-xl px-4 py-2 bg-gray-100">
         <input className="w-full outline-none bg-transparent"
           type="datetime-local"
-          defaultValue={expiration}
-          onChange={e => setExp(e.target.valueAsNumber)} />
+          value={expiration.toISOString().slice(0, 16)}
+          min={new Date().toISOString().slice(0, 16)}
+          onChange={e => setExp(new Date(e.target.value))} />
       </div>
       <div className="my-4" />
       {valid
