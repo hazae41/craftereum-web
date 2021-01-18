@@ -107,7 +107,7 @@ const DepositPage = (props: {
     <div className="my-4" />
     <div className="text-lg font-medium"
       children="Amount" />
-    <div className="my-2" />
+    <div className="my-1" />
     <div className="rounded-xl px-4 py-2 bg-gray-100">
       <input className="w-full outline-none bg-transparent"
         type="number"
@@ -121,7 +121,7 @@ const DepositPage = (props: {
       children="Command" />
     <div className="text-gray-500"
       children="Copy and paste this command in Minecraft" />
-    <div className="my-2" />
+    <div className="my-1" />
     <div className="bg-gray-100 p-2 rounded-lg overflow-auto whitespace-nowrap">
       <input
         readOnly
@@ -175,14 +175,14 @@ const WithdrawPage = (props: {
     <div className="my-4" />
     <div className="text-lg font-medium"
       children="Player" />
-    <div className="my-2" />
+    <div className="my-1" />
     <PlayerInput
       placeholder="Player"
       $player={$player} />
     <div className="my-4" />
     <div className="text-lg font-medium"
       children="Amount" />
-    <div className="my-2" />
+    <div className="my-1" />
     <div className="rounded-xl px-4 py-2 bg-gray-100">
       <input className="w-full outline-none bg-transparent"
         type="number"
@@ -248,7 +248,7 @@ const TransferPage = (props: {
     <div className="my-4" />
     <div className="text-lg font-medium"
       children="Address" />
-    <div className="my-2" />
+    <div className="my-1" />
     <div className="rounded-xl px-4 py-2 bg-gray-100">
       <input className="w-full outline-none bg-transparent"
         value={recipient}
@@ -257,7 +257,7 @@ const TransferPage = (props: {
     <div className="my-4" />
     <div className="text-lg font-medium"
       children="Amount" />
-    <div className="my-2" />
+    <div className="my-1" />
     <div className="rounded-xl px-4 py-2 bg-gray-100">
       <input className="w-full outline-none bg-transparent"
         type="number"
@@ -373,13 +373,8 @@ const ContractCard = (props: {
     return <Loading className="text-white" />
 
   return <div className="bg-white rounded-3xl shadow-lg p-4 w-full max-w-md">
-    <div className="flex justify-between items-center">
-      <div className="text-3xl font-display font-semibold"
-        children="BountyKill" />
-      {expired
-        ? <div className="text-xl font-display text-red-500" children="Expired" />
-        : <div className="text-xl font-display text-green-500" children="Active" />}
-    </div>
+    <div className="text-3xl font-display font-semibold"
+      children="BountyKill" />
     <div className="text-gray-500"
       children="Give the balance to the first player who kills a target." />
     <div className="my-4" />
@@ -393,6 +388,7 @@ const ContractCard = (props: {
     <div className="my-4" />
     <div className="text-lg font-medium"
       children="Address" />
+    <div className="my-1" />
     <div children={address} />
     {verified
       ? <div className="text-green-500" children="Verified bytecode" />
@@ -403,19 +399,25 @@ const ContractCard = (props: {
     <div className="my-4" />
     <div className="text-lg font-medium"
       children="Issuer" />
+    <div className="my-1" />
     <div children={issuer} />
     <div className="my-4" />
     <div className="text-lg font-medium"
       children="Expiration" />
+    <div className="my-1" />
     <div children={expiration?.toLocaleString()} />
+    {expired
+      ? <div className="text-red-500" children="Expired" />
+      : <div className="text-green-500" children="Active" />}
     <div className="my-4" />
     <div className="text-lg font-medium"
       children="Target" />
+    <div className="my-1" />
     {target &&
       <PlayerInfo player={target} />}
     {target === null &&
       <div children="Anyone" />}
-    <div className="my-4" />
+    <div className="my-8" />
     {!expired &&
       <button
         className="rounded-xl w-full p-2 bg-green-400 hover:bg-green-500 text-white font-bold focus:outline-none focus:ring focus:ring-green-300"
@@ -488,8 +490,11 @@ const DeployCard = (props: {
   const $target = useState<Player>()
   const [target, setTarget] = $target
 
-  const [expiration, setExp] = useState(new Date())
-  console.log(moment(expiration))
+  const [expiration, setExp] = useState(() => {
+    const today = new Date()
+    today.setDate(today.getDate() + 1)
+    return today
+  })
 
   const [status, setStatus] = useState<Status>()
   const [contract, setContract] = useState<Contract>()
@@ -536,12 +541,14 @@ const DeployCard = (props: {
       <div className="my-4" />
       <div className="text-lg font-medium"
         children="Target" />
+      <div className="my-1" />
       <PlayerInput
         placeholder="Anyone"
         $player={$target} />
       <div className="my-4" />
       <div className="text-lg font-medium"
         children="Expiration" />
+      <div className="my-1" />
       <div className="rounded-xl px-4 py-2 bg-gray-100">
         <input className="w-full outline-none bg-transparent"
           type="datetime-local"
@@ -549,7 +556,7 @@ const DeployCard = (props: {
           min={moment().format("yyyy-MM-DDTHH:mm")}
           onChange={e => setExp(new Date(e.target.value))} />
       </div>
-      <div className="my-4" />
+      <div className="my-8" />
       {valid
         ? <button className="rounded-xl w-full p-2 bg-green-400 hover:bg-green-500 text-white font-bold focus:outline-none focus:ring focus:ring-green-300"
           onClick={deploy}
