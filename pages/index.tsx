@@ -2,6 +2,7 @@ import { BigNumber } from "https://esm.sh/@ethersproject/bignumber"
 import { Contract, ContractFactory } from "https://esm.sh/@ethersproject/contracts"
 import { Web3Provider } from "https://esm.sh/@ethersproject/providers"
 import React, { useMemo, useState } from 'https://esm.sh/react'
+import moment from "https://esm.sh/moment"
 import { AccountCard } from "../components/account.tsx"
 import { fetchJson, Status } from "../components/async.tsx"
 import { ConnectorPage } from "../components/connector.tsx"
@@ -78,6 +79,9 @@ export const Craftereum = (props: {
       <DepositPage app={app} />}
     {page === "withdraw" &&
       <WithdrawPage app={app} />}
+    {page === "transfer" &&
+      <TransferPage app={app}
+        path={subpath} />}
     {page === "contracts" &&
       <ContractsPage app={app} />}
     {page === "contract" &&
@@ -103,18 +107,21 @@ const DepositPage = (props: {
     <div className="my-4" />
     <div className="text-lg font-medium"
       children="Amount" />
+    <div className="my-2" />
     <div className="rounded-xl px-4 py-2 bg-gray-100">
       <input className="w-full outline-none bg-transparent"
         type="number"
-        min={0}
+        min={1}
         value={amount}
         onChange={e => setAmount(e.target.valueAsNumber)} />
     </div>
-    <div className="my-4" />
+    <div className="my-8" />
+    <div className="my-4 border-b border-gray-200" />
     <div className="text-lg font-medium"
       children="Command" />
     <div className="text-gray-500"
       children="Copy and paste this command in Minecraft" />
+    <div className="my-2" />
     <div className="bg-gray-100 p-2 rounded-lg overflow-auto whitespace-nowrap">
       <input
         readOnly
@@ -167,28 +174,107 @@ const WithdrawPage = (props: {
       children="Withdraw some emeralds from your wallet to your Minecraft account." />
     <div className="my-4" />
     <div className="text-lg font-medium"
-      children="Amount" />
-    <div className="rounded-xl px-4 py-2 bg-gray-100">
-      <input className="w-full outline-none bg-transparent"
-        type="number"
-        min={0}
-        max={balance}
-        value={amount}
-        onChange={e => setAmount(e.target.valueAsNumber)} />
-    </div>
-    <div className="my-4" />
-    <div className="text-lg font-medium"
       children="Player" />
+    <div className="my-2" />
     <PlayerInput
       placeholder="Player"
       $player={$player} />
     <div className="my-4" />
+    <div className="text-lg font-medium"
+      children="Amount" />
+    <div className="my-2" />
+    <div className="rounded-xl px-4 py-2 bg-gray-100">
+      <input className="w-full outline-none bg-transparent"
+        type="number"
+        min={1}
+        value={amount}
+        onChange={e => setAmount(e.target.valueAsNumber)} />
+    </div>
+    <div className="my-8" />
     {valid
       ? <button className="rounded-xl w-full p-2 bg-green-400 hover:bg-green-500 text-white font-bold focus:outline-none focus:ring focus:ring-green-300"
         onClick={withdraw}
         children="Withdraw" />
       : <button className="flex justify-center items-center rounded-xl w-full p-2 bg-green-300 text-white font-bold focus:outline-none cursor-default"
         children={<>{status === "loading" && <Loading className="text-white" />}{"Withdraw"}</>} />}
+    {status === "error" &&
+      <div className="mt-2 text-center font-medium text-red-500"
+        children="An error occured" />}
+  </div>
+}
+
+const TransferPage = (props: {
+  app: AppMemory
+  path: string[]
+}) => {
+  const { path, app } = props;
+  const { emeralds } = app;
+
+  const [address, ...subpath] = path
+
+  const balance = app.balance.toNumber()
+  const [amount, setAmount] = useState(balance)
+
+  const [recipient, setRecipient] = useState(address)
+
+  const [status, setStatus] = useState<Status>()
+
+  const valid = useMemo(() => {
+    if (!recipient) return false
+    if (!amount) return false
+    if (amount > balance) return false
+    if (status === "loading") return false
+    return true
+  }, [amount, balance, recipient, status])
+
+  async function transfer() {
+    try {
+      setStatus("loading")
+      const receipt = await emeralds
+        .transfer(recipient, amount)
+      await receipt.wait()
+      setStatus("ok")
+    } catch (e: unknown) {
+      console.error(e)
+      setStatus("error")
+    }
+  }
+
+  return <div className="bg-white rounded-3xl shadow-lg p-4 w-full max-w-md">
+    <div className="text-3xl font-display font-semibold"
+      children="Transfer" />
+    <div className="text-gray-500"
+      children="Transfer some emeralds from your wallet to an address." />
+    <div className="my-4" />
+    <div className="text-lg font-medium"
+      children="Address" />
+    <div className="my-2" />
+    <div className="rounded-xl px-4 py-2 bg-gray-100">
+      <input className="w-full outline-none bg-transparent"
+        value={recipient}
+        onChange={e => setRecipient(e.target.value)} />
+    </div>
+    <div className="my-4" />
+    <div className="text-lg font-medium"
+      children="Amount" />
+    <div className="my-2" />
+    <div className="rounded-xl px-4 py-2 bg-gray-100">
+      <input className="w-full outline-none bg-transparent"
+        type="number"
+        min={1}
+        value={amount}
+        onChange={e => setAmount(e.target.valueAsNumber)} />
+    </div>
+    <div className="my-8" />
+    {valid
+      ? <button className="rounded-xl w-full p-2 bg-green-400 hover:bg-green-500 text-white font-bold focus:outline-none focus:ring focus:ring-green-300"
+        onClick={transfer}
+        children="Transfer" />
+      : <button className="flex justify-center items-center rounded-xl w-full p-2 bg-green-300 text-white font-bold focus:outline-none cursor-default"
+        children={<>{status === "loading" && <Loading className="text-white" />}{"Transfer"}</>} />}
+    {status === "error" &&
+      <div className="mt-2 text-center font-medium text-red-500"
+        children="An error occured" />}
   </div>
 }
 
@@ -256,7 +342,7 @@ const ContractCard = (props: {
     return await contract.issuer()
   }, [contract])
 
-  const balance = useAsyncMemo(async () => {
+  const balance: BigNumber = useAsyncMemo(async () => {
     if (!contract) return
     return await emeralds.balanceOf(address)
   }, [contract])
@@ -267,14 +353,14 @@ const ContractCard = (props: {
 
   const target = useAsyncMemo(async (signal) => {
     if (!contract) return
-    const id = await contract.targetPlayer()
+    const id = await contract.target()
     if (!id) return null
     return await playerOf(id, signal)
   }, [contract])
 
   const expiration = useAsyncMemo(async (signal) => {
     if (!contract) return
-    const time = await contract.expirationTime()
+    const time = await contract.expiration()
     return new Date(time.toNumber())
   }, [contract])
 
@@ -283,7 +369,7 @@ const ContractCard = (props: {
     return expiration < new Date()
   }, [expiration])
 
-  if (!contract)
+  if (!contract || !bytecode || !balance || !symbol)
     return <Loading className="text-white" />
 
   return <div className="bg-white rounded-3xl shadow-lg p-4 w-full max-w-md">
@@ -329,7 +415,68 @@ const ContractCard = (props: {
       <PlayerInfo player={target} />}
     {target === null &&
       <div children="Anyone" />}
+    <div className="my-4" />
+    {!expired &&
+      <button
+        className="rounded-xl w-full p-2 bg-green-400 hover:bg-green-500 text-white font-bold focus:outline-none focus:ring focus:ring-green-300"
+        onClick={() => visit("/transfer/" + address)}
+        children="Transfer" />}
+    <MethodButton
+      name="Refund"
+      method="refund"
+      valid={expired && balance.gt(0)}
+      contract={contract} />
   </div>
+}
+
+function useGas(method: string, contract?: Contract) {
+  const gas = useAsyncMemo(async () => {
+    if (!contract) return
+    return await contract.estimateGas[method]()
+      .catch(() => null)
+  }, [contract])
+
+  return gas
+}
+
+const MethodButton = (props: {
+  contract?: Contract,
+  method: string,
+  name: string,
+  valid: boolean
+}) => {
+  const { name, method, contract } = props;
+  const gas = useGas(method, contract)
+
+  const [status, setStatus] = useState<Status>()
+
+  async function click() {
+    try {
+      if (!contract) return
+      setStatus("loading")
+      console.log(await contract[method]())
+      setStatus("ok")
+    } catch (e: unknown) {
+      console.error(e)
+      setStatus("error")
+    }
+  }
+
+  const valid = useMemo(() => {
+    if (!props.valid) return false
+    if (!gas) return false
+    if (status === "loading") return false
+    return true
+  }, [props.valid, gas, status])
+
+  return <>
+    {valid
+      ? <button className="rounded-xl w-full p-2 bg-green-400 hover:bg-green-500 text-white font-bold focus:outline-none focus:ring focus:ring-green-300"
+        onClick={click}
+        children={name} />
+      : <button className="flex justify-center items-center rounded-xl w-full p-2 bg-green-300 cursor-default text-white font-bold focus:outline-none"
+        children={<>{status === "loading" && <Loading className="text-white" />}{name}</>} />}
+  </>
 }
 
 const DeployCard = (props: {
@@ -342,6 +489,7 @@ const DeployCard = (props: {
   const [target, setTarget] = $target
 
   const [expiration, setExp] = useState(new Date())
+  console.log(moment(expiration))
 
   const [status, setStatus] = useState<Status>()
   const [contract, setContract] = useState<Contract>()
@@ -356,19 +504,22 @@ const DeployCard = (props: {
   async function deploy() {
     try {
       if (!factory) return
+      if (!expiration) return
       setStatus("loading")
       const contract = await factory
-        .deploy(craftereum.address, target?.id ?? "", expiration)
+        .deploy(craftereum.address, target?.id ?? "", expiration.getTime())
       await contract.deployed()
       setContract(contract)
       setStatus("ok")
       visit("/contract/" + contract.address)
     } catch (e: unknown) {
+      console.error(e)
       setStatus("error")
     }
   }
 
   const valid = useMemo(() => {
+    if (!expiration) return false
     if (expiration < new Date()) return false
     if (status === "loading") return false
     return true
@@ -394,8 +545,8 @@ const DeployCard = (props: {
       <div className="rounded-xl px-4 py-2 bg-gray-100">
         <input className="w-full outline-none bg-transparent"
           type="datetime-local"
-          value={expiration.toISOString().slice(0, 16)}
-          min={new Date().toISOString().slice(0, 16)}
+          value={moment(expiration).format("yyyy-MM-DDTHH:mm")}
+          min={moment().format("yyyy-MM-DDTHH:mm")}
           onChange={e => setExp(new Date(e.target.value))} />
       </div>
       <div className="my-4" />

@@ -74,6 +74,9 @@ export const AccountCard = (props: {
         <button className="rounded-xl w-full p-2 bg-green-400 hover:bg-green-500 text-white font-medium focus:outline-none focus:ring focus:ring-green-300"
           onClick={() => visit("/deposit")}
           children="Deposit" />
+        <button className="rounded-xl w-full p-2 bg-green-400 hover:bg-green-500 text-white font-medium focus:outline-none focus:ring focus:ring-green-300"
+          onClick={() => visit("/transfer")}
+          children="Transfer" />
       </div>
     </div>
   )
