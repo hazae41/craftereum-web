@@ -7,10 +7,11 @@ import { AccountCard } from "../components/account.tsx"
 import { fetchJson, Status } from "../components/async.tsx"
 import { ConnectorPage } from "../components/connector.tsx"
 import { sourcify } from "../components/ethers.tsx"
-import { Loading } from "../components/icons.tsx"
+import { Loading, StarIcon } from "../components/icons.tsx"
 import { usePath, visit } from "../components/path.tsx"
 import { Player, PlayerInfo, PlayerInput, playerOf } from "../components/player.tsx"
-import { useAsyncMemo, useLocalStorage } from "../components/react.tsx"
+import { State, useAsyncMemo, useLocalStorage } from "../components/react.tsx"
+import { append, remove } from "../components/arrayset.tsx"
 
 const github = "https://raw.githubusercontent.com/saurusmc/craftereum/master/"
 
@@ -37,6 +38,7 @@ interface AppMemory {
   craftereum: Contract,
   emeralds: Contract,
   balance: BigNumber
+  $contracts: State<string[]>
 }
 
 export const Craftereum = (props: {
@@ -67,10 +69,13 @@ export const Craftereum = (props: {
     return await emeralds.balanceOf(account)
   }, [emeralds, account])
 
+  const $contracts = useLocalStorage<string[]>("contracts", [])
+
   if (!craftereum || !emeralds || !balance)
     return <Loading className="text-white" />
 
-  const app = { web3, account, craftereum, emeralds, balance }
+  const app: AppMemory =
+    { web3, account, craftereum, emeralds, balance, $contracts }
 
   return (<>
     <AccountCard app={app} />
@@ -281,15 +286,18 @@ const TransferPage = (props: {
 const ContractsPage = (props: {
   app: AppMemory
 }) => {
-  const [contracts, setContracts] =
-    useLocalStorage<string[]>("contracts")
+  const { $contracts } = props.app
 
-  if (!contracts)
-    return <div children="You don't have any contract" />
+  const [contracts, setContracts] = $contracts
+
+  if (!contracts.length)
+    return <div className="my-8 text-2xl text-white font-medium"
+      children="You don't have any contract :(" />
 
   return <>
     {contracts.map(address =>
       <ContractCard
+        key={address}
         address={address}
         {...props} />
     )}
@@ -312,8 +320,18 @@ const ContractCard = (props: {
   app: AppMemory
   address: string
 }) => {
-  const { app: { web3, emeralds }, address } = props
-  const signer = web3.getSigner()
+  const { app, address } = props
+  const { web3, emeralds, $contracts } = app
+
+  const [contracts, setContracts] = $contracts
+  const star = () => setContracts(append(address, contracts))
+  const unstar = () => setContracts(remove(address, contracts))
+
+  const starred = useMemo(() => {
+    return contracts?.includes(address)
+  }, [contracts])
+
+  const signer = useMemo(() => web3.getSigner(), [])
 
   const contract = useAsyncMemo(async (signal) => {
     const url = github + "artifacts/BountyKill.json"
@@ -373,8 +391,17 @@ const ContractCard = (props: {
     return <Loading className="text-white" />
 
   return <div className="bg-white rounded-3xl shadow-lg p-4 w-full max-w-md">
-    <div className="text-3xl font-display font-semibold"
-      children="BountyKill" />
+    <div className="flex justify-between items-center">
+      <div className="text-3xl font-display font-semibold"
+        children="BountyKill" />
+      {starred
+        ? <button className="hover:text-green-500 focus:outline-none"
+          onClick={() => unstar()}
+          children={<StarIcon className="w-6 h-6 fill-current" />} />
+        : <button className="hover:text-green-500 focus:outline-none"
+          onClick={() => star()}
+          children={<StarIcon className="w-6 h-6" />} />}
+    </div>
     <div className="text-gray-500"
       children="Give the balance to the first player who kills a target." />
     <div className="my-4" />
@@ -497,7 +524,6 @@ const DeployCard = (props: {
   })
 
   const [status, setStatus] = useState<Status>()
-  const [contract, setContract] = useState<Contract>()
 
   const factory = useAsyncMemo(async (signal) => {
     const url = github + "artifacts/BountyKill.json"
@@ -514,7 +540,6 @@ const DeployCard = (props: {
       const contract = await factory
         .deploy(craftereum.address, target?.id ?? "", expiration.getTime())
       await contract.deployed()
-      setContract(contract)
       setStatus("ok")
       visit("/contract/" + contract.address)
     } catch (e: unknown) {
