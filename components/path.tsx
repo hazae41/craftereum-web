@@ -17,7 +17,8 @@ export function usePath() {
 }
 
 export function visit(path: string) {
-  const current = window.location.hash.substr(1)
+  let current = window.location.hash.substr(1)
+  if (!current.endsWith("/")) current += "/"
   const url = new URL(path, "http://none.com" + current)
   window.location.hash = url.pathname
 }

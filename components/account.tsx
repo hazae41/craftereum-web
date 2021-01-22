@@ -3,16 +3,10 @@ import { Contract } from "https://esm.sh/@ethersproject/contracts"
 import { Web3Provider } from "https://esm.sh/@ethersproject/providers"
 import Jazzicon from "https://esm.sh/@metamask/jazzicon"
 import React, { useMemo } from 'https://esm.sh/react'
+import { AppMemory } from "./app.tsx"
+import { CopyIcon } from "./icons.tsx"
 import { visit } from "./path.tsx"
 import { useAsyncMemo } from "./react.tsx"
-
-interface AppMemory {
-  web3: Web3Provider,
-  account: string,
-  craftereum: Contract,
-  emeralds: Contract,
-  balance: BigNumber
-}
 
 export const AccountCard = (props: {
   app: AppMemory
@@ -65,6 +59,10 @@ export const AccountCard = (props: {
           dangerouslySetInnerHTML={{ __html: jazzicon.outerHTML }} />
         <div className="text-center text-2xl font-semibold text-black"
           children={account.slice(0, 8) + "..." + account.slice(-8)} />
+        <button className="hover:text-green-500 focus:outline-none"
+          title="Copy address"
+          onClick={() => navigator.clipboard?.writeText(account)}
+          children={<CopyIcon className="w-6 h-6" />} />
       </div>
       <div className="m-2" />
       <div className="flex space-x-2">
