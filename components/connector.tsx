@@ -45,7 +45,7 @@ export const ConnectorPage = (props: {
         onClick={select("fortmatic")} />
       <MetamaskButton
         ethereum={ethereum}
-        onClick={select("metamask")} />}
+        onClick={select("metamask")} />
     </div>
   </div>
 }
