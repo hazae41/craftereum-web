@@ -43,7 +43,8 @@ export const ConnectorPage = (props: {
     <div className="space-y-2">
       <FortmaticButton
         onClick={select("fortmatic")} />
-      {ethereum && <MetamaskButton
+      <MetamaskButton
+        ethereum={ethereum}
         onClick={select("metamask")} />}
     </div>
   </div>
