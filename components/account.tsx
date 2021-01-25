@@ -37,17 +37,19 @@ export const AccountCard = (props: {
     <div className="bg-green-100 rounded-3xl shadow-xl px-6 py-4 w-full max-w-sm">
       <div className="font-semibold text-gray-500"
         children="Balance" />
-      <div className="flex justify-end items-center">
+      <div title="Emeralds"
+        className="flex justify-end items-center">
         <div className="text-4xl"
           children={balance?.toString()} />
         <div className="m-2" />
         <div className="text-4xl font-semibold"
           children={symbol} />
       </div>
-      <div className="flex justify-end items-center">
+      <div title="Ethereums"
+        className="flex justify-end items-center">
         <div className="text-black text-opacity-50"
           children={gas?.toString()} />
-        <div className="m-1" />
+        <div className="mx-1" />
         <div className="text-black text-opacity-50 font-semibold"
           children="Ξ" />
       </div>
