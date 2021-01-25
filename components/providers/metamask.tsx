@@ -42,8 +42,19 @@ export function useAccount(ethereum: any): string | undefined {
 
 export const MetamaskButton = (props: {
   onClick: () => void
+  ethereum?: ExternalProvider
 }) => {
-  const { onClick } = props
+  const { onClick, ethereum } = props
+
+  if (!ethereum)
+    return <button
+      disabled
+      className="rounded-2xl w-full p-4 border-2 border-gray-100 flex justify-between items-center opacity-50 cursor-default">
+      <div className="text-black font-medium"
+        children="MetaMask" />
+      <img height={24} width={24}
+        src="/metamask.png" />
+    </button>
 
   return <button
     className="rounded-2xl w-full p-4 border-2 border-gray-100 hover:border-green-400 flex justify-between items-center focus:outline-none focus:ring focus:ring-green-300"
