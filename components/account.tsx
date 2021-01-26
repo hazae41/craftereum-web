@@ -4,7 +4,7 @@ import { Web3Provider } from "https://esm.sh/@ethersproject/providers"
 import Jazzicon from "https://esm.sh/@metamask/jazzicon"
 import React, { useMemo } from 'https://esm.sh/react'
 import { AppMemory } from "./app.tsx"
-import { CopyIcon } from "./icons.tsx"
+import { CopyIcon, QRCodeIcon } from "./icons.tsx"
 import { visit } from "./path.tsx"
 import { useAsyncMemo } from "./react.tsx"
 
@@ -32,6 +32,12 @@ export const AccountCard = (props: {
     const seed = parseInt(slice, 16)
     return Jazzicon(32, seed)
   }, [account])
+
+  async function test() {
+    const signer = web3.getSigner()
+    const psigned = signer.signMessage("hello world")
+    console.log(psigned)
+  }
 
   return (
     <div className="bg-green-100 rounded-3xl shadow-xl px-6 py-4 w-full max-w-sm">
@@ -61,6 +67,10 @@ export const AccountCard = (props: {
           dangerouslySetInnerHTML={{ __html: jazzicon.outerHTML }} />
         <div className="text-center text-2xl font-semibold text-black"
           children={account.slice(0, 8) + "..." + account.slice(-8)} />
+        <button className="hover:text-green-500 focus:outline-none"
+          title="QR Code"
+          onClick={() => test()}
+          children={<QRCodeIcon className="w-6 h-6" />} />
         <button className="hover:text-green-500 focus:outline-none"
           title="Copy address"
           onClick={() => navigator.clipboard?.writeText(account)}

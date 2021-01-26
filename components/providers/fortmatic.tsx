@@ -2,7 +2,7 @@ import { Web3Provider } from "https://esm.sh/@ethersproject/providers"
 import Fortmatic from "https://esm.sh/fortmatic@latest"
 import React, { useMemo } from 'https://esm.sh/react'
 import { ConnectorComp } from "../connector.tsx"
-import { useNetwork } from "../ethers.tsx"
+import { useAccount, useNetwork } from "../ethers.tsx"
 import { Loading } from "../icons.tsx"
 import { useAsyncMemo } from "../react.tsx"
 
@@ -21,14 +21,6 @@ function useWeb3(fortmatic: any) {
   }, [fortmatic])
 
   return web3
-}
-
-function useAccount(web3: Web3Provider): string | undefined {
-  const accounts = useAsyncMemo(async () => {
-    return await web3.listAccounts()
-  }, [web3])
-
-  return accounts?.[0]
 }
 
 export const FortmaticButton = (props: {
@@ -52,7 +44,6 @@ export const FortmaticConnector = (props: {
   const { component: Component } = props
 
   const fortmatic = useFortmatic()
-
   const web3 = useWeb3(fortmatic)
   const account = useAccount(web3)
   const network = useNetwork(web3)
@@ -62,7 +53,7 @@ export const FortmaticConnector = (props: {
 
   if (network.chainId !== 3)
     return <div className="text-white font-medium"
-      children="Please use the Ropsten Test Network in MetaMask" />
+      children="Please use the Ropsten Test Network" />
 
   return <Component
     web3={web3}

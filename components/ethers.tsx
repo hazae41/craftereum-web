@@ -1,12 +1,20 @@
 import { Network, Web3Provider } from "https://esm.sh/@ethersproject/providers"
 import { useEffect, useState } from 'https://esm.sh/react'
 import { fetchJson } from "./async.tsx"
+import { useAsyncMemo } from "./react.tsx"
 
-export function useNetwork(web3?: Web3Provider) {
+export function useAccount(web3: Web3Provider): string | undefined {
+  const accounts = useAsyncMemo(async () => {
+    return await web3.listAccounts()
+  }, [web3])
+
+  return accounts?.[0]
+}
+
+export function useNetwork(web3: Web3Provider) {
   const [network, setNetwork] = useState<Network>()
 
   useEffect(() => {
-    if (!web3) return
     setNetwork(web3.network)
     web3.on('network', setNetwork)
   }, [web3])
