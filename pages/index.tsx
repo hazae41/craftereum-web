@@ -7,7 +7,7 @@ import { AccountCard } from "../components/account.tsx"
 import { fetchJson, Status } from "../components/async.tsx"
 import { ConnectorPage } from "../components/connector.tsx"
 import { sourcify } from "../components/ethers.tsx"
-import { Loading, StarIcon } from "../components/icons.tsx"
+import { Loading, PlusIcon, SearchIcon, StarIcon } from "../components/icons.tsx"
 import { usePath, visit } from "../components/path.tsx"
 import { Player, PlayerInfo, PlayerInput, playerOf } from "../components/player.tsx"
 import { State, useAsyncMemo, useLocalStorage } from "../components/react.tsx"
@@ -87,6 +87,8 @@ export const Craftereum = (props: {
     {page === "contract" &&
       <ContractPage app={app}
         path={subpath} />}
+    {page === "deploy" &&
+      <DeployCard app={app} />}
     {!page &&
       <HomePage app={app} />}
   </>)
@@ -100,11 +102,26 @@ const HomePage = (props: {
 
   const [contracts] = $contracts
 
-  return <div className="space-y-4">
-    {contracts.length > 0 &&
-      <ContractsDisplay app={app}
-        contracts={contracts} />}
-    <DeployCard app={app} />
+  return <>
+    <SearchBar />
+    <div className="my-2" />
+    <ContractsDisplay app={app}
+      contracts={contracts} />
+  </>
+}
+
+const SearchBar = () => {
+  const [address, setAddress] = useState("")
+  const go = () => visit("/contracts/" + address)
+
+  return <div className="flex items-center w-full max-w-md rounded-2xl shadow-lg px-4 py-2 bg-white">
+    <input className="w-full outline-none bg-transparent"
+      onChange={e => setAddress(e.target.value)}
+      onKeyPress={e => e.key === "Enter" && go()}
+      placeholder="Go to a contract address" />
+    <button className="hover:text-green-500 text-sm font-bold focus:outline-none"
+      onClick={() => go()}
+      children={<SearchIcon className="w-5 h-5" />} />
   </div>
 }
 
@@ -133,13 +150,19 @@ const ContractsDisplay = (props: {
   return <>
     {/* <div className="my-2 text-center text-3xl text-white font-medium"
       children="Contracts" /> */}
-    <div className="">
+    <div className="grid w-full grid-cols-autofit-md justify-center gap-4">
       {contracts.map(address =>
         <ContractCard
           key={address}
           address={address}
           app={app} />
       )}
+      <button className="flex flex-col justify-center items-center rounded-3xl text-white border-dashed border-4 border-white focus:outline-none"
+        onClick={() => visit("/deploy")}>
+        <PlusIcon className="w-9 h-9" />
+        <div className="text-xl font-medium"
+          children="New contract" />
+      </button>
     </div>
   </>
 }
@@ -228,7 +251,9 @@ const ContractCard = (props: {
   }, [expiration])
 
   if (!contract || !bytecode || !balance || !symbol)
-    return <Loading className="text-white" />
+    return <div className="min-h-600 flex flex-col justify-center items-center rounded-3xl border-solid border-4 border-white">
+      <Loading className="text-white" />
+    </div>
 
   return <div className="bg-white rounded-3xl shadow-lg p-4 w-full max-w-md">
     <div className="flex justify-between items-center">
