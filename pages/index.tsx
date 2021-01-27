@@ -157,7 +157,7 @@ const ContractsDisplay = (props: {
           address={address}
           app={app} />
       )}
-      <button className="min-h-600 flex flex-col justify-center items-center rounded-3xl text-white border-dashed border-4 border-white focus:outline-none"
+      <button className="w-full max-w-md min-h-600 flex flex-col justify-center items-center rounded-3xl text-white border-dashed border-4 border-white focus:outline-none"
         onClick={() => visit("/deploy")}>
         <PlusIcon className="w-9 h-9" />
         <div className="text-xl font-medium"
