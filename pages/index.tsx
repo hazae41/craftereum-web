@@ -112,7 +112,7 @@ const HomePage = (props: {
 
 const SearchBar = () => {
   const [address, setAddress] = useState("")
-  const go = () => visit("/contracts/" + address)
+  const go = () => visit("/contract/" + address)
 
   return <div className="flex items-center w-full max-w-md rounded-2xl shadow-lg px-4 py-2 bg-white">
     <input className="w-full outline-none bg-transparent"
