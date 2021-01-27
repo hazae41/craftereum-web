@@ -251,7 +251,7 @@ const ContractCard = (props: {
   }, [expiration])
 
   if (!contract || !bytecode || !balance || !symbol)
-    return <div className="min-h-600 flex flex-col justify-center items-center rounded-3xl border-solid border-4 border-white">
+    return <div className="w-full max-w-md min-h-600 flex flex-col justify-center items-center rounded-3xl border-solid border-4 border-white">
       <Loading className="text-white" />
     </div>
 
